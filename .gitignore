@@ -1,6 +1,29 @@
+# Dependencies
 node_modules/
+
+# Environment variables — NEVER commit these
 .env
 *.env
-uploads/
+.env.local
+.env.*.local
+
+# Build output
 dist/
+build/
+.vite/
+
+# Uploads
+backend/uploads/
+
+# Logs
+npm-debug.log*
+yarn-error.log*
+*.log
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
