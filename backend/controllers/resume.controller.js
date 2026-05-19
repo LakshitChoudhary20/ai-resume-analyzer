@@ -42,7 +42,7 @@ const analyzeResume = async (req, res) => {
     let interviewQuestions = [];
     let aiSummary = '';
 
-    if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here') {
+    if (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== 'your_groq_api_key_here') {
       try {
         [suggestions, interviewQuestions, aiSummary] = await Promise.all([
           getResumeSuggestions(resumeText, skills, missingSkills),
