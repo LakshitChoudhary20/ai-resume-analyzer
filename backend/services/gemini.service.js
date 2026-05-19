@@ -4,9 +4,7 @@ let groq;
 
 const getClient = () => {
   if (!groq) {
-    if (!process.env.GROQ_API_KEY) {
-      throw new Error('GROQ_API_KEY is not set in .env file');
-    }
+    if (!process.env.GROQ_API_KEY) throw new Error('GROQ_API_KEY is not set in .env file');
     groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   }
   return groq;
@@ -35,8 +33,7 @@ MISSING SKILLS (from job market demand): ${missingSkills.slice(0, 10).join(', ')
 Provide exactly 5 specific, actionable suggestions to improve this resume.
 Format your response as a JSON array like:
 [
-  { "category": "Impact", "suggestion": "...", "example": "..." },
-  ...
+  { "category": "Impact", "suggestion": "...", "example": "..." }
 ]
 Return ONLY the JSON array, no other text.`;
 
