@@ -1,24 +1,29 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Groq = require('groq-sdk');
 
-let genAI;
+let groq;
 
 const getClient = () => {
-  if (!genAI) {
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY is not set in .env file');
+  if (!groq) {
+    if (!process.env.GROQ_API_KEY) {
+      throw new Error('GROQ_API_KEY is not set in .env file');
     }
-    genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   }
-  return genAI;
+  return groq;
 };
 
-/**
- * Generates AI-powered resume improvement suggestions.
- */
-const getResumeSuggestions = async (resumeText, skills, missingSkills) => {
-  const model = getClient().getGenerativeModel({ model: 'gemini-1.5-flash' });
+const ask = async (prompt) => {
+  const response = await getClient().chat.completions.create({
+    model: 'llama-3.3-70b-versatile',
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.7,
+    max_tokens: 1500,
+  });
+  return response.choices[0].message.content.trim();
+};
 
-  const prompt = `You are an expert resume coach and ATS specialist. 
+const getResumeSuggestions = async (resumeText, skills, missingSkills) => {
+  const prompt = `You are an expert resume coach and ATS specialist.
 Analyze this resume and provide actionable improvement suggestions.
 
 RESUME TEXT:
@@ -35,23 +40,15 @@ Format your response as a JSON array like:
 ]
 Return ONLY the JSON array, no other text.`;
 
-  const result = await model.generateContent(prompt);
-  const text = result.response.text().trim();
-  
+  const text = await ask(prompt);
   try {
-    const clean = text.replace(/```json|```/g, '').trim();
-    return JSON.parse(clean);
+    return JSON.parse(text.replace(/```json|```/g, '').trim());
   } catch {
     return [{ category: 'General', suggestion: text, example: '' }];
   }
 };
 
-/**
- * Generates role-specific interview questions.
- */
 const getInterviewQuestions = async (resumeText, skills) => {
-  const model = getClient().getGenerativeModel({ model: 'gemini-1.5-flash' });
-
   const prompt = `You are a senior technical interviewer. Based on this candidate's resume, generate realistic interview questions.
 
 RESUME SUMMARY:
@@ -66,23 +63,15 @@ Return ONLY a JSON array like:
 ]
 Return ONLY the JSON array, no other text.`;
 
-  const result = await model.generateContent(prompt);
-  const text = result.response.text().trim();
-
+  const text = await ask(prompt);
   try {
-    const clean = text.replace(/```json|```/g, '').trim();
-    return JSON.parse(clean);
+    return JSON.parse(text.replace(/```json|```/g, '').trim());
   } catch {
     return [{ type: 'General', question: text, hint: '' }];
   }
 };
 
-/**
- * Generates a professional resume summary.
- */
 const generateResumeSummary = async (resumeText, skills) => {
-  const model = getClient().getGenerativeModel({ model: 'gemini-1.5-flash' });
-
   const prompt = `Write a compelling 3-sentence professional summary for this resume.
 Make it ATS-friendly, achievement-focused, and include key skills.
 
@@ -92,8 +81,7 @@ SKILLS: ${skills.join(', ')}
 
 Return ONLY the summary paragraph, no labels or extra text.`;
 
-  const result = await model.generateContent(prompt);
-  return result.response.text().trim();
+  return await ask(prompt);
 };
 
 module.exports = { getResumeSuggestions, getInterviewQuestions, generateResumeSummary };
